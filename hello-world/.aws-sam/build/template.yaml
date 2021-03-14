@@ -5,13 +5,21 @@ Description: 'hello-world
   Sample SAM Template for hello-world
 
   '
-Globals:
-  Function:
-    Timeout: 3
 Resources:
   HelloWorldApi:
     Type: AWS::Serverless::Api
     Properties:
+      AccessLogSetting:
+        DestinationArn:
+          Fn::GetAtt:
+          - HelloWorldLogGroup
+          - Arn
+        Format: '{  "requestId":"$context.requestId", "ip": "$context.identity.sourceIp",
+          "caller":"$context.identity.caller", "user":"$context.identity.user", "requestTime":"$context.requestTime",
+          "httpMethod":"$context.httpMethod", "resourcePath":"$context.resourcePath",
+          "status":"$context.status", "protocol":"$context.protocol", "responseLength":"$context.responseLength",
+          "integrationError":"$context.integration.error", "integrationStatus":"$context.integration.integration.status"
+          }'
       StageName: test
       Cors: '''*'''
   HelloWorldFunction:
@@ -20,6 +28,7 @@ Resources:
       CodeUri: HelloWorldFunction
       Handler: app.lambdaHandler
       Runtime: nodejs14.x
+      Timeout: 3
       Events:
         HelloWorld:
           Type: Api
@@ -28,20 +37,26 @@ Resources:
             Method: get
             RestApiId:
               Ref: HelloWorldApi
-Outputs:
-  HelloWorldApi:
-    Description: API Gateway endpoint URL for Prod stage for Hello World function
-    Value:
-      Fn::Sub: https://${HelloWorldApi}.execute-api.${AWS::Region}.amazonaws.com
-  HelloWorldFunction:
-    Description: Hello World Lambda Function ARN
-    Value:
-      Fn::GetAtt:
-      - HelloWorldFunction
-      - Arn
-  HelloWorldFunctionIamRole:
-    Description: Implicit IAM Role created for Hello World function
-    Value:
-      Fn::GetAtt:
-      - HelloWorldFunctionRole
-      - Arn
+  HelloWorldLogGroup:
+    Type: AWS::Logs::LogGroup
+  Account:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn:
+        Fn::GetAtt:
+        - CloudWatchRole
+        - Arn
+  CloudWatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - apigateway.amazonaws.com
+          Action: sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs

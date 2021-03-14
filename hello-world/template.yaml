@@ -5,15 +5,37 @@ Description: >
 
   Sample SAM Template for hello-world
 
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
-Globals:
-  Function:
-    Timeout: 3
-
 Resources:
   HelloWorldApi:
     Type: AWS::Serverless::Api
     Properties:
+      AccessLogSetting:
+        DestinationArn: !GetAtt HelloWorldLogGroup.Arn
+        # The format must include at least $context.requestId
+        # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apigateway-stage-accesslogsetting.html
+        #Other formats to include later
+        #  "authorizeError":"$context.authorize.error",
+        #  "authorizeStatus":"$context.authorize.status",
+        #  "authorizerSub":"$context.authorizer.claims.sub",
+        #  "authorizerError":"$context.authorizer.error",
+        #  "authorizerStatus":"$context.authorizer.status",
+        #  "authenticateStatus":"$context.authenticate.status",
+        # Make sure you have all lines at same indentation so that ">-" removes newlines.
+        Format: >-
+          { 
+          "requestId":"$context.requestId",
+          "ip": "$context.identity.sourceIp",
+          "caller":"$context.identity.caller",
+          "user":"$context.identity.user",
+          "requestTime":"$context.requestTime",
+          "httpMethod":"$context.httpMethod",
+          "resourcePath":"$context.resourcePath",
+          "status":"$context.status",
+          "protocol":"$context.protocol",
+          "responseLength":"$context.responseLength",
+          "integrationError":"$context.integration.error",
+          "integrationStatus":"$context.integration.integration.status"
+          }
       StageName: test
       Cors: "'*'"
 
@@ -23,22 +45,49 @@ Resources:
       CodeUri: hello-world/
       Handler: app.lambdaHandler
       Runtime: nodejs14.x
+      Timeout: 3
       Events:
         HelloWorld:
           Type: Api
           Properties:
             Path: /hello
             Method: get
-            RestApiId:
-              Ref: HelloWorldApi
+            RestApiId: !Ref HelloWorldApi
 
-Outputs:
-  HelloWorldApi:
-    Description: 'API Gateway endpoint URL for Prod stage for Hello World function'
-    Value: !Sub 'https://${HelloWorldApi}.execute-api.${AWS::Region}.amazonaws.com'
-  HelloWorldFunction:
-    Description: 'Hello World Lambda Function ARN'
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: 'Implicit IAM Role created for Hello World function'
-    Value: !GetAtt HelloWorldFunctionRole.Arn
+  HelloWorldLogGroup:
+    # This is a Cloud Formation type
+    Type: AWS::Logs::LogGroup
+
+  ## An account for this API and corresponding role are required to enable CloudWatch integration.
+  Account:
+    Type: 'AWS::ApiGateway::Account'
+    Properties:
+      CloudWatchRoleArn: !GetAtt CloudWatchRole.Arn
+
+  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-apigateway-account.html
+  CloudWatchRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: /
+      ManagedPolicyArns:
+        - >-
+          arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+
+# Outputs:
+#   HelloWorldApi:
+#     Description: 'API Gateway endpoint URL for Prod stage for Hello World function'
+#     Value: !Sub 'https://${HelloWorldApi}.execute-api.${AWS::Region}.amazonaws.com'
+#   HelloWorldFunction:
+#     Description: 'Hello World Lambda Function ARN'
+#     Value: !GetAtt HelloWorldFunction.Arn
+#   HelloWorldFunctionIamRole:
+#     Description: 'Implicit IAM Role created for Hello World function'
+#     Value: !GetAtt HelloWorldFunctionRole.Arn
