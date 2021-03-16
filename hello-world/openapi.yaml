@@ -1,0 +1,146 @@
+openapi: '3.0.1'
+info:
+  title: 'simple-20210102'
+  version: '2021-03-10T02:24:51Z'
+paths:
+  /ping:
+    get:
+      responses:
+        '200':
+          description: '200 response'
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: 'string'
+          content: {}
+      x-amazon-apigateway-integration:
+        type: 'mock'
+        responses:
+          default:
+            statusCode: '200'
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+              application/json: "{\n  \"status\": \"ok\"\n}"
+        requestTemplates:
+          application/json: '{"statusCode": 200}'
+        passthroughBehavior: 'when_no_match'
+    options:
+      responses:
+        '200':
+          description: '200 response'
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: 'string'
+            Access-Control-Allow-Methods:
+              schema:
+                type: 'string'
+            Access-Control-Allow-Headers:
+              schema:
+                type: 'string'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+      x-amazon-apigateway-integration:
+        type: 'mock'
+        responses:
+          default:
+            statusCode: '200'
+            responseParameters:
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        requestTemplates:
+          application/json: '{"statusCode": 200}'
+        passthroughBehavior: 'when_no_match'
+  /list:
+    get:
+      parameters:
+        - name: 'accessToken'
+          in: 'query'
+          required: true
+          schema:
+            type: 'string'
+      responses:
+        '200':
+          description: '200 response'
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: 'string'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+      security:
+        - cognito-user-pool-auth: []
+      x-amazon-apigateway-request-validator:
+        "Validate query string parameters and\
+        \ headers"
+      x-amazon-apigateway-integration:
+        type: 'mock'
+        responses:
+          default:
+            statusCode: '200'
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+              application/json:
+                "{\n  \"objects\": [\n    { \"url\": \"https://tapedeck-sample-files.s3.us-east-2.amazonaws.com/test.mp3\"\
+                , \"desc\": \"Backwoods Halloween 2020\" },\n    { \"url\": \"https://tapedeck-sample-files.s3.us-east-2.amazonaws.com/test.mp3\"\
+                , \"desc\": \"Late Raisers Club 1/2/21\" },\n    { \"url\": \"https://tapedeck-sample-files.s3.us-east-2.amazonaws.com/test.mp3\"\
+                , \"desc\": \"Odysey - last week\" }\n  ]\n}\n"
+        requestTemplates:
+          application/json: '{"statusCode": 200}'
+        passthroughBehavior: 'when_no_match'
+    options:
+      responses:
+        '200':
+          description: '200 response'
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: 'string'
+            Access-Control-Allow-Methods:
+              schema:
+                type: 'string'
+            Access-Control-Allow-Headers:
+              schema:
+                type: 'string'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+      x-amazon-apigateway-integration:
+        type: 'mock'
+        responses:
+          default:
+            statusCode: '200'
+            responseParameters:
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        requestTemplates:
+          application/json: '{"statusCode": 200}'
+        passthroughBehavior: 'when_no_match'
+components:
+  schemas:
+    Empty:
+      title: 'Empty Schema'
+      type: 'object'
+  securitySchemes:
+    cognito-user-pool-auth:
+      type: 'apiKey'
+      name: 'Authorization'
+      in: 'header'
+      x-amazon-apigateway-authtype: 'cognito_user_pools'
+      x-amazon-apigateway-authorizer:
+        type: 'cognito_user_pools'
+        providerARNs:
+          - Fn::Sub: "${UserPool.Arn}"
+x-amazon-apigateway-request-validators:
+  Validate query string parameters and headers:
+    validateRequestParameters: true
+    validateRequestBody: false

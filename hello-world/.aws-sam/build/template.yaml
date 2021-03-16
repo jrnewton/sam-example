@@ -6,6 +6,15 @@ Description: 'hello-world
 
   '
 Resources:
+  SimpleApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: ../../openapi.yaml
+      StageName: test
   HelloWorldApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -60,3 +69,7 @@ Resources:
       Path: /
       ManagedPolicyArns:
       - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: SAMUserPool

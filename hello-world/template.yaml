@@ -6,6 +6,17 @@ Description: >
   Sample SAM Template for hello-world
 
 Resources:
+  SimpleApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      #!!! Intrinsic functions are not supported in external OpenApi files referenced by DefinitionUri
+      DefinitionBody:
+        'Fn::Transform':
+          Name: 'AWS::Include'
+          Parameters:
+            Location: './openapi.yaml'
+      StageName: test
+
   HelloWorldApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -80,6 +91,21 @@ Resources:
       ManagedPolicyArns:
         - >-
           arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+  # Authorizer:
+  #   Type: AWS::ApiGateway::Authorizer
+  #   Properties:
+  #     RestApiId: 
+
+  UserPool:
+    Type: 'AWS::Cognito::UserPool'
+    Properties:
+      UserPoolName: 'SAMUserPool'
+      # Schema:
+      #   - Name: email
+      #     Required: true
+      #     Mutable: true
+      # AdminCreateUserConfig:
+      #   AllowAdminCreateUserOnly: true
 
 # Outputs:
 #   HelloWorldApi:
