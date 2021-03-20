@@ -1,6 +1,6 @@
 openapi: '3.0.1'
 info:
-  title: 'simple-20210102'
+  title: 'tapedeck-20210102'
   version: '2021-03-10T02:24:51Z'
 paths:
   /ping:
@@ -139,7 +139,7 @@ components:
       x-amazon-apigateway-authorizer:
         type: 'cognito_user_pools'
         providerARNs:
-          - Fn::Sub: "${UserPool.Arn}"
+          - Fn::Sub: '${UserPool.Arn}'
 x-amazon-apigateway-request-validators:
   Validate query string parameters and headers:
     validateRequestParameters: true

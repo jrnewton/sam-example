@@ -1,14 +1,13 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  hello-world
-
-  Sample SAM Template for hello-world
+  A prototype api for tapedeck
 
 Resources:
-  SimpleApi:
+  TapedeckApi:
     Type: AWS::Serverless::Api
     Properties:
+      Name: 'tapedeck-20210319'
       #!!! Intrinsic functions are not supported in external OpenApi files referenced by DefinitionUri
       DefinitionBody:
         'Fn::Transform':
@@ -16,12 +15,10 @@ Resources:
           Parameters:
             Location: './openapi.yaml'
       StageName: test
-
-  HelloWorldApi:
-    Type: AWS::Serverless::Api
-    Properties:
+      #NOTE: CORS requires AWS SAM to modify your OpenAPI definition. So, it works only if inline OpenApi is defined with DefinitionBody.
+      # Cors: "'*'"
       AccessLogSetting:
-        DestinationArn: !GetAtt HelloWorldLogGroup.Arn
+        DestinationArn: !GetAtt LogGroup.Arn
         # The format must include at least $context.requestId
         # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apigateway-stage-accesslogsetting.html
         #Other formats to include later
@@ -47,25 +44,23 @@ Resources:
           "integrationError":"$context.integration.error",
           "integrationStatus":"$context.integration.integration.status"
           }
-      StageName: test
-      Cors: "'*'"
 
-  HelloWorldFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      CodeUri: hello-world/
-      Handler: app.lambdaHandler
-      Runtime: nodejs14.x
-      Timeout: 3
-      Events:
-        HelloWorld:
-          Type: Api
-          Properties:
-            Path: /hello
-            Method: get
-            RestApiId: !Ref HelloWorldApi
+  # TapedeckHelloFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: hello-world/
+  #     Handler: app.lambdaHandler
+  #     Runtime: nodejs14.x
+  #     Timeout: 3
+  #     Events:
+  #       Tapedeck:
+  #         Type: Api
+  #         Properties:
+  #           Path: /hello
+  #           Method: post
+  #           RestApiId: !Ref TapedeckApi
 
-  HelloWorldLogGroup:
+  LogGroup:
     # This is a Cloud Formation type
     Type: AWS::Logs::LogGroup
 
@@ -94,19 +89,18 @@ Resources:
   # Authorizer:
   #   Type: AWS::ApiGateway::Authorizer
   #   Properties:
-  #     RestApiId: 
+  #     RestApiId:
 
   UserPool:
     Type: 'AWS::Cognito::UserPool'
     Properties:
-      UserPoolName: 'SAMUserPool'
+      UserPoolName: 'TapeDeckUserPool20210319'
       # Schema:
       #   - Name: email
       #     Required: true
       #     Mutable: true
       # AdminCreateUserConfig:
       #   AllowAdminCreateUserOnly: true
-
 # Outputs:
 #   HelloWorldApi:
 #     Description: 'API Gateway endpoint URL for Prod stage for Hello World function'
