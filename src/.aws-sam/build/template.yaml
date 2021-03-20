@@ -13,7 +13,7 @@ Resources:
           Name: AWS::Include
           Parameters:
             Location: ../../openapi.yaml
-      StageName: test
+      StageName: Test
       AccessLogSetting:
         DestinationArn:
           Fn::GetAtt:
@@ -52,3 +52,14 @@ Resources:
     Type: AWS::Cognito::UserPool
     Properties:
       UserPoolName: TapeDeckUserPool20210319
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: tapedeck-web-client
+      GenerateSecret: false
+      ExplicitAuthFlows:
+      - ALLOW_USER_SRP_AUTH
+      - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+      UserPoolId:
+        Ref: UserPool

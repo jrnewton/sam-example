@@ -14,7 +14,7 @@ Resources:
           Name: 'AWS::Include'
           Parameters:
             Location: './openapi.yaml'
-      StageName: test
+      StageName: Test
       #NOTE: CORS requires AWS SAM to modify your OpenAPI definition. So, it works only if inline OpenApi is defined with DefinitionBody.
       # Cors: "'*'"
       AccessLogSetting:
@@ -101,6 +101,15 @@ Resources:
       #     Mutable: true
       # AdminCreateUserConfig:
       #   AllowAdminCreateUserOnly: true
+
+  UserPoolClient:
+    Type: 'AWS::Cognito::UserPoolClient'
+    Properties:
+      ClientName: 'tapedeck-web-client'
+      GenerateSecret: false
+      ExplicitAuthFlows: ['ALLOW_USER_SRP_AUTH', 'ALLOW_REFRESH_TOKEN_AUTH']
+      PreventUserExistenceErrors: 'ENABLED'
+      UserPoolId: !Ref UserPool
 # Outputs:
 #   HelloWorldApi:
 #     Description: 'API Gateway endpoint URL for Prod stage for Hello World function'
