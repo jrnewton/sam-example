@@ -12,7 +12,7 @@ const {
   ListUserPoolClientsCommand,
   InitiateAuthCommand,
   RespondToAuthChallengeCommand,
-  AdminDeleteUser
+  AdminDeleteUserCommand
 } = require('@aws-sdk/client-cognito-identity-provider');
 
 const client = new CognitoIdentityProviderClient({ region: REGION });
@@ -157,7 +157,7 @@ const deleteUser = async (user) => {
   const userPool = await getUserPool();
 
   await client.send(
-    new AdminDeleteUser({
+    new AdminDeleteUserCommand({
       Username: user.username,
       UserPoolId: userPool.id
     })
