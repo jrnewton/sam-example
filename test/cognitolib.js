@@ -69,7 +69,7 @@ const getUserPool = async () => {
       clientId
     };
 
-    console.log('returning', userPool);
+    //console.log('returning', userPool);
 
     return userPool;
   } catch (error) {
@@ -93,7 +93,7 @@ const createUser = async () => {
       })
     );
 
-    console.log(JSON.stringify(createUserResponse, null, 2));
+    //console.log(JSON.stringify(createUserResponse, null, 2));
 
     assert.strictEqual(createUserResponse.User.Username, username);
 
@@ -121,7 +121,7 @@ const loginUser = async (user) => {
     })
   );
 
-  console.log(JSON.stringify(authResponse, null, 2));
+  //console.log(JSON.stringify(authResponse, null, 2));
 
   const challengeName = authResponse.ChallengeName;
   const session = authResponse.Session;
@@ -147,15 +147,15 @@ const loginUser = async (user) => {
       })
     );
 
-    console.log(JSON.stringify(challengeResponse, null, 2));
+    //console.log(JSON.stringify(challengeResponse, null, 2));
     authResult = challengeResponse.AuthenticationResult;
   }
 
   user.idToken = authResult.IdToken;
   user.accessToken = authResult.AccessToken;
 
-  console.log('idToken', user.idToken);
-  console.log('accessToken', user.accessToken);
+  // console.log('idToken', user.idToken);
+  // console.log('accessToken', user.accessToken);
 
   return user;
 };
