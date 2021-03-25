@@ -21,7 +21,7 @@ paths:
             responseParameters:
               method.response.header.Access-Control-Allow-Origin: "'*'"
             responseTemplates:
-              application/json: "{\n  \"status\": \"ok\"\n}"
+              application/json: "{\n  \"status\": \"ping okay\"\n}"
         requestTemplates:
           application/json: '{"statusCode": 200}'
         passthroughBehavior: 'when_no_match'
