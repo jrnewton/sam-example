@@ -1,8 +1,5 @@
 'use strict';
 
-const REGION = 'us-west-2';
-const USERPOOL = 'TapeDeckUserPool20210319';
-
 const assert = require('assert');
 
 const {
@@ -15,7 +12,9 @@ const {
   AdminDeleteUserCommand
 } = require('@aws-sdk/client-cognito-identity-provider');
 
-const client = new CognitoIdentityProviderClient({ region: REGION });
+const { region, userPoolName } = require('./config');
+
+const client = new CognitoIdentityProviderClient({ region: region });
 
 const pwdgen = require('generate-password');
 
@@ -34,11 +33,15 @@ const pwdPolicy = {
   strict: true
 };
 
+let userPool = null;
+
 const getUserPool = async () => {
-  const userPool = {
-    id: null,
-    clientId: null
-  };
+  if (userPool) {
+    return userPool;
+  }
+
+  let id = null;
+  let clientId = null;
 
   try {
     const poolResponse = await client.send(
@@ -46,21 +49,25 @@ const getUserPool = async () => {
     );
 
     for (let pool of poolResponse.UserPools) {
-      if (pool.Name === USERPOOL) {
-        userPool.id = pool.Id;
+      if (pool.Name === userPoolName) {
+        id = pool.Id;
       }
     }
 
     const clientResponse = await client.send(
-      new ListUserPoolClientsCommand({ UserPoolId: userPool.id })
+      new ListUserPoolClientsCommand({ UserPoolId: id })
     );
 
     assert.strictEqual(clientResponse.UserPoolClients.length, 1);
-    userPool.clientId = clientResponse.UserPoolClients[0].ClientId;
+    clientId = clientResponse.UserPoolClients[0].ClientId;
 
-    assert.notStrictEqual(userPool, null);
-    assert.notStrictEqual(userPool.id, null);
-    assert.notStrictEqual(userPool.clientId, null);
+    assert.notStrictEqual(id, null);
+    assert.notStrictEqual(clientId, null);
+
+    userPool = {
+      id,
+      clientId
+    };
 
     console.log('returning', userPool);
 

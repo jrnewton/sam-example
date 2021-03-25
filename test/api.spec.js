@@ -6,29 +6,45 @@ const axios = require('axios').default;
 
 const { createUser, loginUser, deleteUser } = require('./cognitolib');
 
-const REGION = 'us-west-2';
-
 //Remember: Passing arrow functions to Mocha is discouraged https://mochajs.org/#arrow-functions
 describe('api smoke tests with authentication', function () {
   let user = null;
 
   before('create user and login', async function () {
-    user = await loginUser(await createUser());
+    try {
+      console.log('creating user...');
+      user = await createUser();
+
+      console.log('login...');
+      await loginUser(user);
+    } catch (error) {
+      assert.fail('before caught error ' + error);
+    }
   });
 
   it('calls /ping', async function () {
-    axios.get('?accessToken=' + user.accessToken, {
-      headers: {
-        Authorization: user.idToken
-      }
-    });
+    try {
+      const response = await axios.get('?accessToken=' + user.accessToken, {
+        headers: {
+          Authorization: user.idToken
+        }
+      });
+      assert.notStrictEqual(response, null);
+    } catch (error) {
+      assert.fail('ping caught error ' + error);
+    }
   });
 
-  // it('calls /list', async function () {
-  //   assert.strictEqual(true, true);
-  // });
-
   after('delete user', async function () {
-    await deleteUser(user);
+    if (user) {
+      try {
+        console.log('deleting user...');
+        await deleteUser(user);
+      } catch (error) {
+        assert.fail('delete caught error ' + error);
+      }
+    } else {
+      console.log('no user to delete');
+    }
   });
 });
