@@ -38,8 +38,7 @@ describe('api smoke tests with authentication', function () {
 
       assert.notStrictEqual(response, null);
       assert.strictEqual(response.status, 200);
-
-      console.log('response', response.data);
+      assert.strictEqual(response.data.status, 'ping okay');
     } catch (error) {
       assert.fail('ping caught error ' + error);
     }
