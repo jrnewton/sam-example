@@ -13,9 +13,16 @@ const region = samConfig.default.deploy.parameters.region;
 const samTemplate = yaml.parse(
   fs.readFileSync(path.resolve(__dirname, '../src/template.yaml'), 'utf-8')
 );
+
 const userPoolName = samTemplate.Resources.UserPool.Properties.UserPoolName;
+
+const apiName = samTemplate.Resources.TapedeckApi.Properties.Name;
+
+const apiStageName = samTemplate.Resources.TapedeckApi.Properties.StageName;
 
 module.exports = {
   region,
-  userPoolName
+  userPoolName,
+  apiName,
+  apiStageName
 };
