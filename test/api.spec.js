@@ -5,6 +5,7 @@ const assert = require('assert');
 const axios = require('axios').default;
 
 const { createUser, loginUser, deleteUser } = require('./cognitolib');
+const { getEndpoint } = require('./apigatewaylib');
 
 //Remember: Passing arrow functions to Mocha is discouraged https://mochajs.org/#arrow-functions
 describe('api smoke tests with authentication', function () {
@@ -24,12 +25,21 @@ describe('api smoke tests with authentication', function () {
 
   it('calls /ping', async function () {
     try {
-      const response = await axios.get('?accessToken=' + user.accessToken, {
+      const endpoint = await getEndpoint();
+      const url = endpoint + '/ping?accessToken=' + user.accessToken;
+
+      console.log('GET', url);
+
+      const response = await axios.get(url, {
         headers: {
           Authorization: user.idToken
         }
       });
+
       assert.notStrictEqual(response, null);
+      assert.strictEqual(response.status, 200);
+
+      console.log('response', response.data);
     } catch (error) {
       assert.fail('ping caught error ' + error);
     }
