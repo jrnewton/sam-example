@@ -17,7 +17,7 @@ Resources:
       AccessLogSetting:
         DestinationArn:
           Fn::GetAtt:
-          - LogGroup
+          - ApiGatewayLogGroup
           - Arn
         Format: '{  "requestId":"$context.requestId", "ip": "$context.identity.sourceIp",
           "caller":"$context.identity.caller", "user":"$context.identity.user", "requestTime":"$context.requestTime",
@@ -25,7 +25,29 @@ Resources:
           "status":"$context.status", "protocol":"$context.protocol", "responseLength":"$context.responseLength",
           "integrationError":"$context.integration.error", "integrationStatus":"$context.integration.integration.status"
           }'
-  LogGroup:
+  TapedeckArchiveFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: TapedeckArchiveFunction
+      Handler: app.lambdaHandler
+      Runtime: nodejs14.x
+      Timeout: 15
+      MemorySize: 520
+      Role:
+        Fn::GetAtt:
+        - LambdaArchiveRole
+        - Arn
+      Events:
+        TapedeckArchive:
+          Type: Api
+          Properties:
+            Path: /archive
+            Method: post
+            RestApiId:
+              Ref: TapedeckApi
+  LambdaArchiveLogGroup:
+    Type: AWS::Logs::LogGroup
+  ApiGatewayLogGroup:
     Type: AWS::Logs::LogGroup
   Account:
     Type: AWS::ApiGateway::Account
@@ -34,6 +56,10 @@ Resources:
         Fn::GetAtt:
         - CloudWatchRole
         - Arn
+  TapedeckBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: tapedeck-archives-test
   CloudWatchRole:
     Type: AWS::IAM::Role
     Properties:
@@ -48,6 +74,41 @@ Resources:
       Path: /
       ManagedPolicyArns:
       - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+  LambdaArchiveRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: logs
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource:
+              Fn::GetAtt:
+              - LambdaArchiveLogGroup
+              - Arn
+      - PolicyName: s3
+        PolicyDocument:
+          Statement:
+          - Effect: Allow
+            Action:
+            - s3:PutItem
+            Resource:
+            - Fn::GetAtt:
+              - TapedeckBucket
+              - Arn
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
