@@ -18,7 +18,7 @@ Resources:
       #NOTE: CORS requires AWS SAM to modify your OpenAPI definition. So, it works only if inline OpenApi is defined with DefinitionBody.
       # Cors: "'*'"
       AccessLogSetting:
-        DestinationArn: !GetAtt LogGroup.Arn
+        DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
         # The format must include at least $context.requestId
         # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-apigateway-stage-accesslogsetting.html
         #Other formats to include later
@@ -45,22 +45,28 @@ Resources:
           "integrationStatus":"$context.integration.integration.status"
           }
 
-  # TapedeckHelloFunction:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     CodeUri: hello-world/
-  #     Handler: app.lambdaHandler
-  #     Runtime: nodejs14.x
-  #     Timeout: 3
-  #     Events:
-  #       Tapedeck:
-  #         Type: Api
-  #         Properties:
-  #           Path: /hello
-  #           Method: post
-  #           RestApiId: !Ref TapedeckApi
+  TapedeckArchiveFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: tapedeck-archive-test
+      CodeUri: archive/
+      Handler: app.lambdaHandler
+      Runtime: nodejs14.x
+      Timeout: 15
+      MemorySize: 520
+      Role: !GetAtt LambdaArchiveRole.Arn
+      Events:
+        TapedeckArchive:
+          Type: Api
+          Properties:
+            Path: /archive
+            Method: post
+            RestApiId: !Ref TapedeckApi
 
-  LogGroup:
+  LambdaArchiveLogGroup:
+    Type: AWS::Logs::LogGroup
+
+  ApiGatewayLogGroup:
     # This is a Cloud Formation type
     Type: AWS::Logs::LogGroup
 
@@ -69,6 +75,12 @@ Resources:
     Type: 'AWS::ApiGateway::Account'
     Properties:
       CloudWatchRoleArn: !GetAtt CloudWatchRole.Arn
+
+  TapedeckBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: tapedeck-archives-test
+  #      VersioningConfiguration: Enabled
 
   # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-apigateway-account.html
   CloudWatchRole:
@@ -86,6 +98,34 @@ Resources:
       ManagedPolicyArns:
         - >-
           arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+  LambdaArchiveRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: logs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !GetAtt LambdaArchiveLogGroup.Arn
+        - PolicyName: s3
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub '${TapedeckBucket.Arn}/*'
   # Authorizer:
   #   Type: AWS::ApiGateway::Authorizer
   #   Properties:
