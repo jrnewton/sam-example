@@ -28,6 +28,7 @@ Resources:
   TapedeckArchiveFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: tapedeck-archive-test
       CodeUri: TapedeckArchiveFunction
       Handler: app.lambdaHandler
       Runtime: nodejs14.x
@@ -103,12 +104,9 @@ Resources:
         PolicyDocument:
           Statement:
           - Effect: Allow
-            Action:
-            - s3:PutItem
+            Action: s3:PutObject
             Resource:
-            - Fn::GetAtt:
-              - TapedeckBucket
-              - Arn
+              Fn::Sub: ${TapedeckBucket.Arn}/*
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:

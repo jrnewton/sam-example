@@ -54,11 +54,11 @@ const upload = async (desc, sub, resource, pass) => {
 
   const s3 = new AWS.S3({
     apiVersion: '2006-03-01',
-    region: 'us-east-2'
+    region: 'us-west-2'
   });
 
   const params = {
-    Bucket: 'tapedeck-archives',
+    Bucket: 'tapedeck-archives-test',
     Key: key,
     Metadata: {
       'playlist-description': desc
