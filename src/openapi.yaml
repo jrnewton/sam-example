@@ -3,6 +3,108 @@ info:
   title: 'tapedeck-20210102'
   version: '2021-03-10T02:24:51Z'
 paths:
+  /archive:
+    get:
+      parameters:
+        - name: 'accessToken'
+          in: 'query'
+          required: true
+          schema:
+            type: 'string'
+      responses:
+        '200':
+          description: '200 response'
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: 'string'
+          content: {}
+      security:
+        - cognito-user-pool-auth: []
+      x-amazon-apigateway-request-validator:
+        "Validate query string parameters and\
+        \ headers"
+      x-amazon-apigateway-integration:
+        type: 'mock'
+        responses:
+          default:
+            statusCode: '200'
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+              application/json:
+                "{\n \"url\": \"https://tapedeck-sample-files.s3.us-east-2.amazonaws.com/test.mp3\"\
+                , \n \"desc\": \"Backwoods Halloween 2020\" \n}\n"
+        requestTemplates:
+          application/json: '{"statusCode": 200}'
+        passthroughBehavior: 'when_no_match'
+    post:
+      parameters:
+        - name: 'accessToken'
+          in: 'query'
+          required: true
+          schema:
+            type: 'string'
+      responses:
+        '200':
+          description: '200 response'
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: 'string'
+          content: {}
+      security:
+        - cognito-user-pool-auth: []
+      x-amazon-apigateway-request-validator:
+        "Validate query string parameters and\
+        \ headers"
+      x-amazon-apigateway-integration:
+        type: 'aws'
+        uri:
+          Fn::Sub: 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TapedeckArchiveFunction.Arn}/invocations'
+        httpMethod: 'POST'
+        responses:
+          default:
+            statusCode: '200'
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        requestTemplates:
+          application/json:
+            "{\n  \"sub\": \"$context.authorizer.claims.sub\",\n \
+            \ \"url\": $input.json('$.url'),\n  \"desc\": $input.json('$.desc')\n\
+            }\n"
+        passthroughBehavior: 'when_no_templates'
+        contentHandling: 'CONVERT_TO_TEXT'
+    options:
+      responses:
+        '200':
+          description: '200 response'
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: 'string'
+            Access-Control-Allow-Methods:
+              schema:
+                type: 'string'
+            Access-Control-Allow-Headers:
+              schema:
+                type: 'string'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+      x-amazon-apigateway-integration:
+        type: 'mock'
+        responses:
+          default:
+            statusCode: '200'
+            responseParameters:
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        requestTemplates:
+          application/json: '{"statusCode": 200}'
+        passthroughBehavior: 'when_no_match'
   /ping:
     get:
       responses:
@@ -121,6 +223,64 @@ paths:
             responseParameters:
               method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        requestTemplates:
+          application/json: '{"statusCode": 200}'
+        passthroughBehavior: 'when_no_match'
+  /hello:
+    get:
+      parameters:
+        - name: 'accessToken'
+          in: 'query'
+          schema:
+            type: 'string'
+      responses:
+        '200':
+          description: '200 response'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+      security:
+        - cognito-user-pool-auth: []
+      x-amazon-apigateway-request-validator:
+        "Validate query string parameters and\
+        \ headers"
+      x-amazon-apigateway-integration:
+        type: 'aws'
+        httpMethod: 'POST'
+        uri: 'arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:336249122316:function:tapedeck-west-hello/invocations'
+        responses:
+          default:
+            statusCode: '200'
+        passthroughBehavior: 'when_no_match'
+        contentHandling: 'CONVERT_TO_TEXT'
+    options:
+      responses:
+        '200':
+          description: '200 response'
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: 'string'
+            Access-Control-Allow-Methods:
+              schema:
+                type: 'string'
+            Access-Control-Allow-Headers:
+              schema:
+                type: 'string'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empty'
+      x-amazon-apigateway-integration:
+        type: 'mock'
+        responses:
+          default:
+            statusCode: '200'
+            responseParameters:
+              method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
               method.response.header.Access-Control-Allow-Origin: "'*'"
         requestTemplates:
           application/json: '{"statusCode": 200}'
