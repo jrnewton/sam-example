@@ -1,13 +1,13 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  A prototype api for tapedeck
+  A simple authentication and authorization example
 
 Resources:
-  TapedeckApi:
+  HelloApi:
     Type: AWS::Serverless::Api
     Properties:
-      Name: 'tapedeck-20210319'
+      Name: 'hello-20210330'
       #!!! Intrinsic functions are not supported in external OpenApi files referenced by DefinitionUri
       DefinitionBody:
         'Fn::Transform':
