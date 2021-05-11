@@ -1,3 +1,5 @@
+# Be sure to set a corresponding stackname in samconfig.toml
+
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
@@ -13,10 +15,8 @@ Resources:
         'Fn::Transform':
           Name: 'AWS::Include'
           Parameters:
-            Location: './openapi.yaml'
+            Location: './hello-api.yaml'
       StageName: Test
-      #NOTE: CORS requires AWS SAM to modify your OpenAPI definition. So, it works only if inline OpenApi is defined with DefinitionBody.
-      # Cors: "'*'"
       AccessLogSetting:
         DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
         # The format must include at least $context.requestId
@@ -45,25 +45,30 @@ Resources:
           "integrationStatus":"$context.integration.integration.status"
           }
 
-  TapedeckArchiveFunction:
+  HelloFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: tapedeck-archive-test
-      CodeUri: archive/
+      FunctionName: hello
+      CodeUri: hello/
       Handler: app.lambdaHandler
       Runtime: nodejs14.x
-      Timeout: 15
-      MemorySize: 520
-      Role: !GetAtt LambdaArchiveRole.Arn
+      Timeout: 3
+      MemorySize: 128
+      Role: !GetAtt LambdaRole.Arn
       Events:
-        TapedeckArchive:
+        Hello:
           Type: Api
           Properties:
-            Path: /archive
-            Method: post
-            RestApiId: !Ref TapedeckApi
+            Path: /hello
+            Method: get
+            RestApiId: !Ref HelloApi
 
-  LambdaArchiveLogGroup:
+  HelloBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: hello-20210330
+
+  LambdaFunctionLogGroup:
     Type: AWS::Logs::LogGroup
 
   ApiGatewayLogGroup:
@@ -75,12 +80,6 @@ Resources:
     Type: 'AWS::ApiGateway::Account'
     Properties:
       CloudWatchRoleArn: !GetAtt CloudWatchRole.Arn
-
-  TapedeckBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: tapedeck-archives-test
-  #      VersioningConfiguration: Enabled
 
   # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-apigateway-account.html
   CloudWatchRole:
@@ -98,7 +97,8 @@ Resources:
       ManagedPolicyArns:
         - >-
           arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
-  LambdaArchiveRole:
+
+  LambdaRole:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -119,22 +119,18 @@ Resources:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                Resource: !GetAtt LambdaArchiveLogGroup.Arn
+                Resource: !GetAtt LambdaFunctionLogGroup.Arn
         - PolicyName: s3
           PolicyDocument:
             Statement:
               - Effect: Allow
                 Action: s3:PutObject
-                Resource: !Sub '${TapedeckBucket.Arn}/*'
-  # Authorizer:
-  #   Type: AWS::ApiGateway::Authorizer
-  #   Properties:
-  #     RestApiId:
+                Resource: !Sub '${HelloBucket.Arn}/*'
 
   UserPool:
     Type: 'AWS::Cognito::UserPool'
     Properties:
-      UserPoolName: 'TapeDeckUserPool20210319'
+      UserPoolName: 'HelloUserPool20210330'
       # Schema:
       #   - Name: email
       #     Required: true
@@ -145,19 +141,9 @@ Resources:
   UserPoolClient:
     Type: 'AWS::Cognito::UserPoolClient'
     Properties:
-      ClientName: 'tapedeck-web-client'
+      ClientName: 'hello-web-client'
       GenerateSecret: false
       ExplicitAuthFlows:
         ['ALLOW_USER_PASSWORD_AUTH', 'ALLOW_REFRESH_TOKEN_AUTH']
       PreventUserExistenceErrors: 'ENABLED'
       UserPoolId: !Ref UserPool
-# Outputs:
-#   HelloWorldApi:
-#     Description: 'API Gateway endpoint URL for Prod stage for Hello World function'
-#     Value: !Sub 'https://${HelloWorldApi}.execute-api.${AWS::Region}.amazonaws.com'
-#   HelloWorldFunction:
-#     Description: 'Hello World Lambda Function ARN'
-#     Value: !GetAtt HelloWorldFunction.Arn
-#   HelloWorldFunctionIamRole:
-#     Description: 'Implicit IAM Role created for Hello World function'
-#     Value: !GetAtt HelloWorldFunctionRole.Arn

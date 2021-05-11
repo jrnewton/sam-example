@@ -9,7 +9,7 @@ exports.handler = async (_event, _context) => {
   });
 
   const params = {
-    Bucket: 'tapedeck-archives-test',
+    Bucket: 'hello-world',
     Key: Math.random() + '',
     Body: Buffer.from("I'm a string!", 'utf-8')
   };

@@ -2,9 +2,9 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "tapedeck-20210319"
+stack_name = "hello-20210330"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1v6hkwj0j1wrr"
-s3_prefix = "tapedeck-20210319"
+s3_prefix = "hello-20210330"
 region = "us-west-2"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
